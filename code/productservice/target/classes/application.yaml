@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: productservice
+
+management:
+  health:
+    probes:
+      enabled: true

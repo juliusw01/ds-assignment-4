@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: orderservice
+# This is not needed later in Kubernetes, but only for local development
+server:
+  port: 8081
+
+management:
+  health:
+    probes:
+      enabled: true
