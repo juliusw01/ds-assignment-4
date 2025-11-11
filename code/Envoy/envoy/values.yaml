@@ -52,10 +52,12 @@ securityContext: {}
 # This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
-  type: ClusterIP
+  # setting type to NodePort allows the app to get a port from the host machine it is running on
+  # if set to 'ClusterIP', the pod would only be accessible via the cluster and would not be exposed to the host system
+  # alternatively I could also use 'LoadBalancer' which would arguably be better for a production grade system
+  type: NodePort
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 10000
-  adminPort: 9901
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -147,19 +149,12 @@ volumes:
   - name: envoy-config
     configMap:
       name: envoy-config
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
 
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts:
   - name: envoy-config
-    mountPath: /etc/envoy #/envoy.yaml
+    mountPath: /etc/envoy
     readOnly: true
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
 
 nodeSelector: {}
 
