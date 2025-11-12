@@ -37,7 +37,7 @@ public class ProductController {
         return productService.saveProduct(product);
     }
 
-    @PostMapping("/{id}/buy")
+    @PostMapping("/buy")
     public ResponseEntity<Object> buyProduct(@RequestBody BuyProductDTO productDTO){
         return productService.buyProduct(productDTO);
     }

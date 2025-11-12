@@ -4,6 +4,7 @@ import com.example.productservice.DTO.BuyProductDTO;
 import com.example.productservice.DTO.ProductRequestDTO;
 import com.example.productservice.DTO.ProductResponseDTO;
 import com.example.productservice.Model.Product;
+import com.example.productservice.RabbitMQ.OrderMessageProducer;
 import com.example.productservice.Repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,9 @@ public class ProductService {
 
     @Autowired
     ProductRepository productRepository;
+
+    @Autowired
+    OrderMessageProducer orders;
 
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts(){
         List<ProductResponseDTO> products = productRepository.findAll()
@@ -67,6 +71,7 @@ public class ProductService {
         productRepository.deleteById(product.get().getId());
         productRepository.save(product.get());
         // call orderservice here
+        orders.sendOrderMessage(quantity + " " + product.get().getName() + "s have been ordered");
         return new ResponseEntity<>("Order created", HttpStatus.OK);
     }
 }

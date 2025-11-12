@@ -1,5 +1,7 @@
 package com.example.orderservice.Controller;
 
+import com.example.orderservice.Service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -14,8 +16,11 @@ import java.util.List;
 @RequestMapping("order/api/v1/orders")
 public class OrderController {
 
+    @Autowired
+    OrderService orderService;
+
     @PostMapping("/create/new")
-    public ResponseEntity<Object> createOrder(){
+    public ResponseEntity<String> createOrder(){
         /**
          * Here I want to receive order objects. When I receive an order, the product has already been paid.
          * I therefore only want to process the order (not triggering a payment service etc.)
@@ -23,6 +28,7 @@ public class OrderController {
          * does not have to be processed immediately.
          * Processing an order would include sending out a confirmation email, triggering a shipping service, etc.
          */
-
+        orderService.createNewOrder();
+        return new ResponseEntity<>("Order created", HttpStatus.CREATED);
     }
 }

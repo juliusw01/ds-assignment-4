@@ -34,6 +34,8 @@ helm repo add postgres-operator-ui-charts https://opensource.zalando.com/postgre
 helm install postgres-operator-ui postgres-operator-ui-charts/postgres-operator-ui
 kubectl apply -f ./ProductDB/product-database/templates/postgres-cluster.yaml
 
+helm install rabbitmq rabbitmq/rabbitmq
+
 echo
 
 if ! minikube image ls | grep docker.io/library/orderservice:latest
@@ -50,7 +52,7 @@ fi
 helm install orderservice orderservice/orderservice --atomic
 
 # Install the productservice
-#helm install productservice productservice/productservice --atomic
+helm install productservice productservice/productservice --atomic
 
 #Install the envoy gateway
 helm install envoy Envoy/envoy --atomic
