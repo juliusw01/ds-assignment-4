@@ -1,5 +1,6 @@
 package com.example.productservice.Service;
 
+import com.example.productservice.DTO.BuyProductDTO;
 import com.example.productservice.DTO.ProductRequestDTO;
 import com.example.productservice.DTO.ProductResponseDTO;
 import com.example.productservice.Model.Product;
@@ -8,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -51,8 +52,21 @@ public class ProductService {
         ProductResponseDTO response = new ProductResponseDTO(saved.getId(), saved.getName(), saved.getDescription(), saved.getPrice());
          return new ResponseEntity<>(response, HttpStatus.OK);
     }
-
-    public ResponseEntity<Object> buyProduct(UUID id){
-        return null;
+    @Transactional
+    public synchronized ResponseEntity<Object> buyProduct(BuyProductDTO productDTO){
+        Optional<Product> product = productRepository.findById(productDTO.getId());
+        if (product.isEmpty() || product.get().getQuantity() <= 0){
+            return new ResponseEntity<>("Product not available", HttpStatus.NOT_FOUND);
+        }
+        int quantity = product.get().getQuantity();
+        if (quantity < productDTO.getQuantity()){
+            return new ResponseEntity<>("Only " + quantity + " items left", HttpStatus.BAD_REQUEST);
+        }
+        //Payment logic here --> I will pretend the customer has paid and I can proceed with the order
+        product.get().setQuantity(quantity-productDTO.getQuantity());
+        productRepository.deleteById(product.get().getId());
+        productRepository.save(product.get());
+        // call orderservice here
+        return new ResponseEntity<>("Order created", HttpStatus.OK);
     }
 }

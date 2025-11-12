@@ -1,5 +1,6 @@
 package com.example.productservice.Controller;
 
+import com.example.productservice.DTO.BuyProductDTO;
 import com.example.productservice.DTO.ProductRequestDTO;
 import com.example.productservice.DTO.ProductResponseDTO;
 import com.example.productservice.Model.Product;
@@ -37,7 +38,7 @@ public class ProductController {
     }
 
     @PostMapping("/{id}/buy")
-    public ResponseEntity<Object> buyProduct(@PathVariable UUID id){
-        return productService.buyProduct(id);
+    public ResponseEntity<Object> buyProduct(@RequestBody BuyProductDTO productDTO){
+        return productService.buyProduct(productDTO);
     }
 }
