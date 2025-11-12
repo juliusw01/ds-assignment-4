@@ -25,6 +25,14 @@ then
   minikube start
 fi
 
+# Add and install the postgresql kubernetes driver
+helm repo add postgres-operator-charts https://opensource.zalando.com/postgres-operator/charts/postgres-operator
+helm install postgres-operator postgres-operator-charts/postgres-operator
+# Add and install postgres-operator-ui
+# This is for development only as it exposes too much!
+helm repo add postgres-operator-ui-charts https://opensource.zalando.com/postgres-operator/charts/postgres-operator-ui
+helm install postgres-operator-ui postgres-operator-ui-charts/postgres-operator-ui
+
 echo
 
 if ! minikube image ls | grep docker.io/library/orderservice:latest
@@ -41,7 +49,7 @@ fi
 helm install orderservice orderservice/orderservice --atomic
 
 # Install the productservice
-helm install productservice productservice/productservice --atomic
+#helm install productservice productservice/productservice --atomic
 
 #Install the envoy gateway
 helm install envoy Envoy/envoy --atomic

@@ -1,0 +1,22 @@
+apiVersion: "acid.zalan.do/v1"
+kind: "postgresql"
+metadata:
+  name: "product-postgres-cluster"
+  annotations:
+    zalando.io/operator-config: "postgresql-custom-config"
+  labels:
+    name: "product-postgres-cluster"
+#    {{- include "product-database.labels" . | nindent 4 }}
+spec:
+  teamId: "postgres"
+  volume:
+    size: 2Gi
+  numberOfInstances: 1
+  users:
+    productsvcuser:
+      - superuser
+      - createdb
+  databases:
+    products: productsvcuser
+  postgresql:
+    version: "17"

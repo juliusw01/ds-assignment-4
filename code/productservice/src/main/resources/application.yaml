@@ -1,6 +1,19 @@
 spring:
   application:
     name: productservice
+  # Postgresql config
+  datasource:
+    url: jdbc:postgresql://product-postgres-cluster:5432/products
+    username: productsvcuser
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 management:
   health:
