@@ -40,6 +40,13 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.auth | quote }}
+                  key: {{ .Values.postgres.password | quote }}
+
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
