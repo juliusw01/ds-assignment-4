@@ -68,10 +68,10 @@ public class ProductService {
         }
         //Payment logic here --> I will pretend the customer has paid and I can proceed with the order
         product.get().setQuantity(quantity-productDTO.getQuantity());
-        productRepository.deleteById(product.get().getId());
+        //productRepository.deleteById(product.get().getId());
         productRepository.save(product.get());
         // call orderservice here
-        orders.sendOrderMessage(quantity + " " + product.get().getName() + "s have been ordered");
+        orders.sendOrderMessage(productDTO.getQuantity() + " " + product.get().getName() + "s have been ordered");
         return new ResponseEntity<>("Order created", HttpStatus.OK);
     }
 }

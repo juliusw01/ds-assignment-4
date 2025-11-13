@@ -34,7 +34,7 @@ helm repo add postgres-operator-ui-charts https://opensource.zalando.com/postgre
 helm install postgres-operator-ui postgres-operator-ui-charts/postgres-operator-ui
 kubectl apply -f ./ProductDB/product-database/templates/postgres-cluster.yaml
 
-helm install rabbitmq rabbitmq/rabbitmq
+helm install rabbitmq rabbitmq/rabbitmq --atomic
 
 echo
 
