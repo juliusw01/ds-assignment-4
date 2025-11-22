@@ -1,0 +1,178 @@
+---
+# Source: envoy/templates/envoy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-config
+data:
+  envoy.yaml: |-
+    static_resources:
+      listeners:
+        - name: listener_0
+          address:
+            socket_address:
+              address: 0.0.0.0
+              port_value: 10000
+          filter_chains:
+            - filters:
+                - name: envoy.filters.network.http_connection_manager
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                    stat_prefix: ingress_http
+                    access_log:
+                      - name: envoy.access_loggers.stdout
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                    http_filters:
+                      - name: envoy.filters.http.router
+                        typed_config:
+                          "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                    route_config:
+                      name: local_route
+                      virtual_hosts:
+                        - name: commerce_service
+                          domains: [ "*" ]
+                          routes:
+                            - match:
+                                prefix: "/order"
+                              route:
+                                cluster: order_cluster
+                            - match:
+                                prefix: "/product"
+                              route:
+                                cluster: product_cluster
+                            - match:
+                                prefix: "/"
+                              route:
+                                cluster: admin_cluster
+      clusters:
+        - name: order_cluster
+          type: STRICT_DNS
+          dns_lookup_family: V4_ONLY
+          load_assignment:
+            cluster_name: order_cluster
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: orderservice
+                          port_value: 8081
+        - name: product_cluster
+          type: STRICT_DNS
+          dns_lookup_family: V4_ONLY
+          load_assignment:
+            cluster_name: product_cluster
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: productservice
+                          port_value: 8080
+        - name: admin_cluster
+          type: STRICT_DNS
+          dns_lookup_family: V4_ONLY
+          load_assignment:
+            cluster_name: admin_cluster
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: 127.0.0.1
+                          port_value: 9901
+    
+    admin:
+      #profile_path: /tmp/envoy.prof
+      address:
+        socket_address:
+          address: 127.0.0.1
+          port_value: 9901
+---
+# Source: envoy/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-envoy
+  labels:
+    helm.sh/chart: envoy-0.1.0
+    app.kubernetes.io/name: envoy
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 10000
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: envoy
+    app.kubernetes.io/instance: release-name
+---
+# Source: envoy/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-envoy
+  labels:
+    helm.sh/chart: envoy-0.1.0
+    app.kubernetes.io/name: envoy
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: envoy
+      app.kubernetes.io/instance: release-name
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: envoy-0.1.0
+        app.kubernetes.io/name: envoy
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: envoy
+          image: "envoyproxy/envoy:v1.34.7"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 10000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/envoy
+              name: envoy-config
+              readOnly: true
+      volumes:
+        - configMap:
+            name: envoy-config
+          name: envoy-config
+---
+# Source: envoy/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "release-name-envoy-test-connection"
+  labels:
+    helm.sh/chart: envoy-0.1.0
+    app.kubernetes.io/name: envoy
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['release-name-envoy:10000']
+  restartPolicy: Never

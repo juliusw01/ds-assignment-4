@@ -1,0 +1,126 @@
+---
+# Source: product-database/templates/postgres-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-custom-config
+data:
+  POSTGRES_DB=products
+  POSTGRES_USER=productsvcuser
+  POSTGRES_PASSWORD=password
+---
+# Source: product-database/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: release-name-product-database
+  labels:
+    helm.sh/chart: product-database-0.1.0
+    app.kubernetes.io/name: product-database
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: product-database
+    app.kubernetes.io/instance: release-name
+---
+# Source: product-database/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-product-database
+  labels:
+    helm.sh/chart: product-database-0.1.0
+    app.kubernetes.io/name: product-database
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: product-database
+      app.kubernetes.io/instance: release-name
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: product-database-0.1.0
+        app.kubernetes.io/name: product-database
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: product-database
+          image: "postgres:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5432
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+---
+# Source: product-database/templates/postgres-cluster.yaml
+apiVersion: "acid.zalan.do/v1"
+kind: "postgresql"
+metadata:
+  name: "product-postgres-cluster"
+  annotations:
+    zalando.io/operator-config: "postgresql-custom-config"
+  labels:
+    name: "product-postgres-cluster"
+#
+    helm.sh/chart: product-database-0.1.0
+    app.kubernetes.io/name: product-database
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  teamId: "postgres"
+  volume:
+    size: 2Gi
+  numberOfInstances: 1
+  users:
+    productsvcuser:
+      - superuser
+      - createdb
+  databases:
+    products: productsvcuser
+  postgresql:
+    version: "17"
+---
+# Source: product-database/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "release-name-product-database-test-connection"
+  labels:
+    helm.sh/chart: product-database-0.1.0
+    app.kubernetes.io/name: product-database
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['release-name-product-database:5432']
+  restartPolicy: Never

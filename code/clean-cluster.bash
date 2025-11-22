@@ -6,3 +6,4 @@ helm uninstall envoy
 helm uninstall postgres-operator
 helm uninstall postgres-operator-ui
 helm uninstall rabbitmq
+kubectl delete -f ProductDB/product-database/templates/postgres-cluster.yaml

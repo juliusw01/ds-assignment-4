@@ -6,5 +6,3 @@ data:
   POSTGRES_DB=products
   POSTGRES_USER=productsvcuser
   POSTGRES_PASSWORD=password
-#  postgresql: |-
-#{{ .Files.get "config/postgresql.conf | indent 4 }}
